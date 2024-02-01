@@ -1,4 +1,4 @@
-## vLLM-promptflow (update name)
+## vLLM-promptflow-deploy
 This repo is a short guide to 
 - Hosting your own state-of-the-art open-source LLM's such as Mixtral 8x7B using the vLLM inference engine
 - Using your hosted model in prompt-flow to develop your custom LLM flows and applications
@@ -49,16 +49,13 @@ python -m vllm.entrypoints.openai.api_server: This starts the API server.
 
 --chat-template <path>: Defines the path to the chat template file. Here, it's set to /archive/shared/sim_center/shared/mixtral/vllm/template_mistral.jinja.
 
---trust-remote-code: This flag indicates that the server should trust and run remote code. This might be necessary for certain types of model interaction but can pose a security risk.
+--trust-remote-code: This flag indicates that the server should trust and run remote code.
 
---dtype float16: Sets the data type for tensors in the model to float16. This is often used for reduced memory consumption and improved performance.
+--dtype float16: Sets the data type for tensors in the model to float16. This is the default precision for the full Mixtral model
 
---tensor-parallel-size 4: Specifies the size of the tensor parallelism. A value of 4 indicates that tensor operations are distributed across 4 different processes/devices.
+--tensor-parallel-size 4: Specifies the size of the tensor parallelism. This shows over how many GPU's the model is being shared.
 
---max-model-len 8192: Sets the maximum sequence length that the model can handle to 8192 tokens. This is an upper limit on the length of input sequences the model can process.
-
-- Key is "EMPTY"
-- model is /path/to/model/directory
+--max-model-len 8192: This is the max number of tokens that the model can support. In this case, Mixtral can support process a context window of 8192 tokens.
 
 ### Testing your server
 
