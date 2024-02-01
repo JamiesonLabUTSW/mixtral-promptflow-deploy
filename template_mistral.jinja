@@ -1,0 +1,12 @@
+{%- for message in messages -%}
+    {%- if message.role == 'system' -%}
+        <s> [INST] {{ message.content+'\n\n' }}
+    {%- elif message.role == 'user' -%}
+        {%- if loop.previtem is defined and loop.previtem.role =='system' -%}
+            {{ message.content }} [/INST]
+        {%- else -%}
+            <s> [INST] {{ message.content }} [/INST]
+        {%- endif -%}
+    {%- else %} {{ message.content }}</s>
+    {%- endif -%}
+{% endfor %}

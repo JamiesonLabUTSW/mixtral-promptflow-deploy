@@ -1,0 +1,25 @@
+$schema: https://azuremlschemas.azureedge.net/promptflow/latest/Flow.schema.json
+environment:
+  python_requirements_txt: requirements.txt
+inputs:
+  question:
+    type: string
+    default: What is your name?
+outputs:
+  answer:
+    type: string
+    reference: ${chat.output}
+nodes:
+- name: chat
+  type: llm
+  source:
+    type: code
+    path: chat.jinja2
+  inputs:
+    deployment_name: gpt-35-16k-ameer
+    max_tokens: 256
+    temperature: 0.7
+    model: /archive/shared/sim_center/shared/mixtral/data/Mixtral-8x7B-Instruct-v0.1
+    question: ${inputs.question}
+  connection: Mixtral
+  api: chat
