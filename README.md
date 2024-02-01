@@ -1,92 +1,112 @@
-# Mixtral Promptflow Deploy
+## vLLM-promptflow (update name)
+This repo is a short guide to 
+- Hosting your own state-of-the-art open-source LLM's such as Mixtral 8x7B using the vLLM inference engine
+- Using your hosted model in prompt-flow to develop your custom LLM flows and applications
 
+**vLLM** is a flexible and efficient library for large language model (LLM) inference that makes it easy to host and serve LLM's. vLLM provides:
+- Seamless integration with popular HuggingFace models
+- OpenAI compatible API server 
 
+**promptFlow** is a set of development tools designed to streamline prototyping, testing, deployment and monitoring of LLM apps. 
 
-## Getting started
+### Installation
+1. Create new conda environment 
+```sh
+conda create -n myenv python=3.9 -y
+conda activate myenv
+```
+2. Install vllm, ray and prompt-flow 
+```sh
+pip install vllm
+pip install promptflow promptflow-tools
+```
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+### Launch vLLM inference server 
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+This repo contains a demo for running an OpenAI protocol compatible API server using vLLM that runs the Mixtral 8X7B MOE model - one of the most peformant open source LLMs available as of Jan '24. Using the OpenAI API protocol makes it easy to swap OpenAI models that you may already be using in your applications with models that are self-hosted or from other providers. 
 
-## Add your files
+The Mixtral model can run with `float16` precision on 1 GPU4v100 node on BioHPC. 
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+To launch your inference server, you can either
+
+   - Use a bash script `serve_mixtral.sh` (recommended)
+   - Request an interactive node and launch your server on it
+
+If you decide to run or test your server on an interactive node, make sure your request 4 gpus in the SLURM command
+```sh
+srun -p GPU4v100 --gres=gpu:4 --pty /bin/bash
+
+python -m vllm.entrypoints.openai.api_server \
+  --model /archive/shared/sim_center/shared/mixtral/data/Mixtral-8x7B-Instruct-v0.1 \
+  --chat-template /archive/shared/sim_center/shared/mixtral/vllm/template_mistral.jinja \
+  --trust-remote-code --dtype float16 --tensor-parallel-size 4 --max-model-len 8192
+```
+#### Parameters Explanation
+
+python -m vllm.entrypoints.openai.api_server: This starts the API server.
+
+--model <path>: Specifies the path to the model directory. In this case, it is /archive/shared/sim_center/shared/mixtral/data/Mixtral-8x7B-Instruct-v0.1.
+
+--chat-template <path>: Defines the path to the chat template file. Here, it's set to /archive/shared/sim_center/shared/mixtral/vllm/template_mistral.jinja.
+
+--trust-remote-code: This flag indicates that the server should trust and run remote code. This might be necessary for certain types of model interaction but can pose a security risk.
+
+--dtype float16: Sets the data type for tensors in the model to float16. This is often used for reduced memory consumption and improved performance.
+
+--tensor-parallel-size 4: Specifies the size of the tensor parallelism. A value of 4 indicates that tensor operations are distributed across 4 different processes/devices.
+
+--max-model-len 8192: Sets the maximum sequence length that the model can handle to 8192 tokens. This is an upper limit on the length of input sequences the model can process.
+
+- Key is "EMPTY"
+- model is /path/to/model/directory
+
+### Testing your server
+
+To get the ip-address of the node that your server is running at. For BioHPC, the node name may look something like `Nucleus162`
+```sh
+ssh <node-name> hostname -i
+```
+
+To test whether the server running your models is running, you can query the server with
+```sh
+curl http://<ip-address>:8000/v1/models
+```
+
+If using BioHPC - you may need to first specify a proxy server for HTTP connections. To do this run 
+```sh
+export HTTPS_PROXY=http://proxy.swmed.edu:3128
+export https_proxy=http://proxy.swmed.edu:3128
+```
+You can also add these lines to your `./bashrc` file in your home directory and manually execute it or restart your terminal. 
+```sh
+source ~/.bashrc
+```
+
+### Querying your server
+You can run either of 
+```sh
+python test_chat.py
+python test.py
+```
+to query your LLM. Make sure that you replace the model path and ip-address with the model path and ip-address of your vLLM server.
+
+Alternatively, you can query it from the terminal: 
+```sh
+curl http:/<ip-address>:8000/generate \
+            -d '{
+                     "prompt": "San Francisco is a",
+                                "use_beam_search": false, "max_tokens": 300,
+                                 "n": 4, "temperature": 0.5}'
 
 ```
-cd existing_repo
-git remote add origin https://git.biohpc.swmed.edu/jamiesonlab/mixtral-promptflow-deploy.git
-git branch -M main
-git push -uf origin main
-```
 
-## Integrate with your tools
+### prompt-flow
 
-- [ ] [Set up project integrations](https://git.biohpc.swmed.edu/jamiesonlab/mixtral-promptflow-deploy/-/settings/integrations)
+Read the README file in the /promptflow directory
 
-## Collaborate with your team
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Automatically merge when pipeline succeeds](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+## Authors
+Ameer Hamza Shakur
 
-## Test and Deploy
+Michael Holcomb
 
-Use the built-in continuous integration in GitLab.
-
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
