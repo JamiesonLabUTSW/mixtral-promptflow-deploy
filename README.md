@@ -103,8 +103,8 @@ Read the README file in the /promptflow directory
 
 
 ## Authors
-Ameer Hamza Shakur
-Michael Holcomb
+- Ameer Hamza Shakur 
+- Michael Holcomb
 
 Jamieson Lab - UT Southwestern
 
