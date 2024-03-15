@@ -37,6 +37,8 @@ python create_connection.py
 
 - Open flow.dag.yaml
 - Update the model field under nodes -> llm-node -> inputs -> model: to the 'model' field in create_connection.py in step 2(i)
+- In this example the model field should be set to: model="/archive/shared/sim_center/shared/mixtral/data/Mixtral-8x7B-Instruct-v0.1"
+- By default it is the path to the model weights that are used by vllm 
 
 7. Go back to the visual editor. The right model name should now show up in the model field.
     
