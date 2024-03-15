@@ -73,6 +73,8 @@ If using BioHPC - you may need to first specify a proxy server for HTTP connecti
 ```sh
 export HTTPS_PROXY=http://proxy.swmed.edu:3128
 export https_proxy=http://proxy.swmed.edu:3128
+unset http_proxy
+unset HTTP_PROXY
 ```
 You can also add these lines to your `./bashrc` file in your home directory and manually execute it or restart your terminal. 
 ```sh
