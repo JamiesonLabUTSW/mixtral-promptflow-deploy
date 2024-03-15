@@ -9,7 +9,7 @@
 set -x
 
 module load cuda121
-conda activate vllm-env
+source activate vllm-env
 
 export CUDA_VISIBLE_DEVICES=0,1,2,3
 
